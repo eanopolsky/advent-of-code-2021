@@ -59,6 +59,12 @@ fn main() {
             part,
             solve_day_1_part_1(puzzle_input)
         ),
+        (1, 2) => println!(
+            "The solution to day {} part {} is {}",
+            day,
+            part,
+            solve_day_1_part_2(puzzle_input)
+        ),
         _ => println!(
             "The solution for day {} part {} is not implemented",
             day, part
@@ -88,4 +94,28 @@ fn solve_day_1_part_1(puzzle_input: String) -> u32 {
         previous_reading = current_reading;
     }
     return increases;
+}
+
+fn solve_day_1_part_2(puzzle_input: String) -> u32 {
+    let mut sonar_sweep_report = puzzle_input
+        .split("\n")
+        .filter_map(|reading: &str| -> Option<u32> { reading.parse::<u32>().ok() });
+
+    let mut increases: u32 = 0;
+
+    let mut previous_window = [
+        sonar_sweep_report.next().unwrap(),
+        sonar_sweep_report.next().unwrap(),
+        sonar_sweep_report.next().unwrap(),
+    ];
+
+    for new_reading in sonar_sweep_report {
+        let current_window = [previous_window[1], previous_window[2], new_reading];
+        if current_window.iter().sum::<u32>() > previous_window.iter().sum::<u32>() {
+            increases += 1;
+        }
+        previous_window = current_window;
+    }
+
+    increases
 }
