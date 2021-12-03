@@ -52,24 +52,15 @@ fn main() {
     let puzzle_input: String = fs::read_to_string(input_file_path)
         .expect("Something went wrong while reading the input file.");
 
-    match (day, part) {
-        (1, 1) => println!(
-            "The solution to day {} part {} is {}",
-            day,
-            part,
-            solve_day_1_part_1(puzzle_input)
-        ),
-        (1, 2) => println!(
-            "The solution to day {} part {} is {}",
-            day,
-            part,
-            solve_day_1_part_2(puzzle_input)
-        ),
-        _ => println!(
+    let solution: u32 = match (day, part) {
+        (1, 1) => solve_day_1_part_1(puzzle_input),
+        (1, 2) => solve_day_1_part_2(puzzle_input),
+        _ => panic!(
             "The solution for day {} part {} is not implemented",
             day, part
         ),
-    }
+    };
+    println!("The solution to day {} part {} is {}", day, part, solution);
 }
 
 fn solve_day_1_part_1(puzzle_input: String) -> u32 {
