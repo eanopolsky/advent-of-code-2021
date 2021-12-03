@@ -56,6 +56,7 @@ fn main() {
         (1, 1) => solve_day_1_part_1(puzzle_input),
         (1, 2) => solve_day_1_part_2(puzzle_input),
         (2, 1) => solve_day_2_part_1(puzzle_input),
+        (2, 2) => solve_day_2_part_2(puzzle_input),
         _ => panic!(
             "The solution for day {} part {} is not implemented",
             day, part
@@ -154,6 +155,51 @@ fn solve_day_2_part_1(puzzle_input: String) -> u32 {
             }
             SubMovement::Up(n) => {
                 depth -= n;
+            }
+        }
+    }
+
+    depth * horizontal_position
+}
+
+fn solve_day_2_part_2(puzzle_input: String) -> u32 {
+    let sub_directions =
+        puzzle_input
+            .split("\n")
+            .filter_map(|movement: &str| -> Option<SubMovement> {
+                if movement == "" {
+                    return None;
+                }
+                let mut components = movement.split(" ");
+                let direction = components
+                    .next()
+                    .expect("Failed to find direction in component");
+                let magnitude = components
+                    .next()
+                    .expect("Failed to find magnitude in component")
+                    .parse::<u32>()
+                    .expect("Failed to parse numeric magnitude");
+                match direction {
+                    "forward" => Some(SubMovement::Forward(magnitude)),
+                    "down" => Some(SubMovement::Down(magnitude)),
+                    "up" => Some(SubMovement::Up(magnitude)),
+                    _ => panic!("Unsupported direction in component"),
+                }
+            });
+    let mut aim: i32 = 0;
+    let mut depth: u32 = 0;
+    let mut horizontal_position: u32 = 0;
+    for sub_direction in sub_directions {
+        match sub_direction {
+            SubMovement::Forward(n) => {
+                horizontal_position += n;
+                depth = ((depth as i32) + aim * n as i32) as u32;
+            }
+            SubMovement::Down(n) => {
+                aim += n as i32;
+            }
+            SubMovement::Up(n) => {
+                aim -= n as i32;
             }
         }
     }
