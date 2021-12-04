@@ -60,7 +60,7 @@ fn main() {
         (3, 1) => solve_day_3_part_1(puzzle_input),
         (3, 2) => solve_day_3_part_2(puzzle_input),
         (4, 1) => solve_day_4_part_1(puzzle_input),
-        //(4, 2) => solve_day_4_part_2(puzzle_input),
+        (4, 2) => solve_day_4_part_2(puzzle_input),
         _ => panic!(
             "The solution for day {} part {} is not implemented",
             day, part
@@ -311,7 +311,7 @@ impl BingoBoard {
                 return true;
             }
         }
-        for column_number in 0..4 {
+        for column_number in 0..5 {
             if self
                 .squares
                 .iter()
@@ -347,12 +347,10 @@ fn solve_day_4_part_1(puzzle_input: String) -> u32 {
         .split(",")
         .map(|n| n.parse::<u32>().unwrap())
         .collect();
-    //println!("numbers called: {:?}", numbers_called);
 
     let mut boards: Vec<BingoBoard> = Vec::new();
 
     for board_section in section_iterator {
-        //println!("got part: {}", board_section);
         let new_squares = board_section
             .split("\n")
             .filter(|line| line.len() != 0)
@@ -366,30 +364,15 @@ fn solve_day_4_part_1(puzzle_input: String) -> u32 {
                     .collect()
             })
             .collect::<Vec<Vec<BingoSquare>>>();
-        //println!("new_board: {:?}", new_board);
         boards.push(BingoBoard {
             squares: new_squares,
         });
     }
 
-    // let first_board = &mut boards[0];
-    // println!("before marking: {:#?}", first_board);
-    // first_board.mark_number(&57);
-    // first_board.mark_number(&80);
-    // first_board.mark_number(&91);
-    // first_board.mark_number(&40);
-    // first_board.mark_number(&12);
-    // println!("after marking: {:#?}", first_board);
-
     for number_called in numbers_called.iter() {
-        //        println!("number_called: {}", number_called);
         for board in &mut boards {
-            //            println!("board before marking: {:?}", board);
             board.mark_number(number_called);
-            //            println!("board after marking: {:?}", board);
             if board.is_winner() {
-                //println!("found winner: {:?}", board);
-                // return 0;
                 return board.sum_of_unmarked_squares() * number_called;
             }
         }
@@ -397,6 +380,59 @@ fn solve_day_4_part_1(puzzle_input: String) -> u32 {
     panic!("Failed to find winning board.");
 }
 
-// fn solve_day_4_part_2(puzzle_input: String) -> u32 {
-//     0
-// }
+fn solve_day_4_part_2(puzzle_input: String) -> u32 {
+    let mut section_iterator = puzzle_input.split("\n\n");
+
+    let numbers_called: Vec<u32> = section_iterator
+        .next()
+        .unwrap()
+        .split(",")
+        .map(|n| n.parse::<u32>().unwrap())
+        .collect();
+
+    let mut boards: Vec<BingoBoard> = Vec::new();
+
+    for board_section in section_iterator {
+        let new_squares = board_section
+            .split("\n")
+            .filter(|line| line.len() != 0)
+            .map(|line| -> Vec<BingoSquare> {
+                line.split_whitespace()
+                    .map(|num| num.parse::<u32>().unwrap())
+                    .map(|num| BingoSquare {
+                        number: num,
+                        called: false,
+                    })
+                    .collect()
+            })
+            .collect::<Vec<Vec<BingoSquare>>>();
+        boards.push(BingoBoard {
+            squares: new_squares,
+        });
+    }
+
+    for number_called in numbers_called.iter() {
+        for board in &mut boards {
+            board.mark_number(number_called);
+        }
+        let non_winning_boards_left: u32 = boards
+            .iter()
+            .map(|board| {
+                if !board.is_winner() {
+                    return 1;
+                }
+                0
+            })
+            .sum();
+        println!("non-winning boards left: {}", non_winning_boards_left);
+        if non_winning_boards_left > 0 {
+            boards = boards
+                .into_iter()
+                .filter(|board| !board.is_winner())
+                .collect();
+            continue;
+        }
+        return boards.last().unwrap().sum_of_unmarked_squares() * number_called;
+    }
+    panic!("Failed to find last winning board.");
+}
