@@ -234,12 +234,7 @@ fn solve_day_3_part_1(puzzle_input: String) -> u32 {
 fn solve_day_3_part_2(puzzle_input: String) -> u32 {
     let diagnostic_report: Vec<&str> = puzzle_input
         .split("\n")
-        .filter_map(|report_number: &str| -> Option<&str> {
-            if report_number == "" {
-                return None;
-            }
-            Some(report_number)
-        })
+        .filter(|report_number| -> bool { report_number.len() != 0 })
         .collect();
     let mut oxygen_generator_possibilities = diagnostic_report.clone();
     for bit_position in 0..12 {
