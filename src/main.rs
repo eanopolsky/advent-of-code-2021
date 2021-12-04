@@ -196,15 +196,9 @@ fn solve_day_2_part_2(puzzle_input: String) -> u32 {
 }
 
 fn solve_day_3_part_1(puzzle_input: String) -> u32 {
-    let diagnostic_report =
-        puzzle_input
-            .split("\n")
-            .filter_map(|report_number: &str| -> Option<&str> {
-                if report_number == "" {
-                    return None;
-                }
-                Some(report_number)
-            });
+    let diagnostic_report = puzzle_input
+        .split("\n")
+        .filter(|report_number| (report_number.len() != 0));
     let mut report_size = 0;
     let mut bit_counts: [u32; 12] = [0; 12];
     for report_entry in diagnostic_report {
@@ -215,10 +209,6 @@ fn solve_day_3_part_1(puzzle_input: String) -> u32 {
             }
         }
     }
-    println!(
-        "report_size = {}, bit_counts = {:?}",
-        report_size, bit_counts
-    );
     let mut gamma_rate = 0;
     for count in bit_counts {
         if count * 2 > report_size {
