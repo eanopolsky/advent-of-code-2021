@@ -57,6 +57,7 @@ fn main() {
         (1, 2) => solve_day_1_part_2(puzzle_input),
         (2, 1) => solve_day_2_part_1(puzzle_input),
         (2, 2) => solve_day_2_part_2(puzzle_input),
+        (3, 1) => solve_day_3_part_1(puzzle_input),
         _ => panic!(
             "The solution for day {} part {} is not implemented",
             day, part
@@ -191,4 +192,40 @@ fn solve_day_2_part_2(puzzle_input: String) -> u32 {
     }
 
     depth * horizontal_position
+}
+
+fn solve_day_3_part_1(puzzle_input: String) -> u32 {
+    let diagnostic_report =
+        puzzle_input
+            .split("\n")
+            .filter_map(|report_number: &str| -> Option<&str> {
+                if report_number == "" {
+                    return None;
+                }
+                Some(report_number)
+            });
+    let mut report_size = 0;
+    let mut bit_counts: [u32; 12] = [0; 12];
+    for report_entry in diagnostic_report {
+        report_size += 1;
+        for (i, report_char) in report_entry.chars().enumerate() {
+            if report_char == '1' {
+                bit_counts[i] += 1;
+            }
+        }
+    }
+    println!(
+        "report_size = {}, bit_counts = {:?}",
+        report_size, bit_counts
+    );
+    let mut gamma_rate = 0;
+    for count in bit_counts {
+        if count * 2 > report_size {
+            gamma_rate += 1;
+        }
+        gamma_rate *= 2;
+    }
+    gamma_rate /= 2;
+    let epsilon_rate = 2_u32.pow(12) - 1 - gamma_rate;
+    epsilon_rate * gamma_rate
 }
