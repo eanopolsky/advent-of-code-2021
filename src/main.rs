@@ -1,4 +1,5 @@
 use clap::{App, Arg};
+use std::cmp;
 use std::fs;
 
 fn main() {
@@ -61,6 +62,7 @@ fn main() {
         (3, 2) => solve_day_3_part_2(puzzle_input),
         (4, 1) => solve_day_4_part_1(puzzle_input),
         (4, 2) => solve_day_4_part_2(puzzle_input),
+        (5, 1) => solve_day_5_part_1(puzzle_input),
         _ => panic!(
             "The solution for day {} part {} is not implemented",
             day, part
@@ -435,4 +437,142 @@ fn solve_day_4_part_2(puzzle_input: String) -> u32 {
         return boards.last().unwrap().sum_of_unmarked_squares() * number_called;
     }
     panic!("Failed to find last winning board.");
+}
+
+#[derive(Debug)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+#[derive(Debug)]
+struct VentLine {
+    start_point: Point,
+    end_point: Point,
+}
+
+impl VentLine {
+    fn is_horizontal_or_vertical(&self) -> bool {
+        if self.is_horizontal() || self.is_vertical() {
+            return true;
+        }
+        false
+    }
+
+    fn is_horizontal(&self) -> bool {
+        if self.start_point.y == self.end_point.y {
+            return true;
+        }
+        false
+    }
+
+    fn is_vertical(&self) -> bool {
+        if self.start_point.x == self.end_point.x {
+            return true;
+        }
+        false
+    }
+
+    fn get_points_on_line(&self) -> Vec<Point> {
+        let mut points_on_line = Vec::new();
+        if self.is_horizontal() {
+            let x_range = match self.start_point.x < self.end_point.x {
+                true => (self.start_point.x)..=(self.end_point.x),
+                false => (self.end_point.x)..=(self.start_point.x),
+            };
+            for x in x_range {
+                points_on_line.push(Point {
+                    x: x,
+                    y: self.start_point.y,
+                });
+            }
+        } else if self.is_vertical() {
+            let y_range = match self.start_point.y < self.end_point.y {
+                true => (self.start_point.y)..=(self.end_point.y),
+                false => (self.end_point.y)..=(self.start_point.y),
+            };
+            for y in y_range {
+                points_on_line.push(Point {
+                    x: self.start_point.x,
+                    y: y,
+                });
+            }
+        } else {
+            panic!(
+                "Getting points on lines that are neither horizontal nor vertical is not supported"
+            );
+        }
+        points_on_line
+    }
+}
+
+fn solve_day_5_part_1(puzzle_input: String) -> u32 {
+    let vent_lines = puzzle_input
+        .split("\n")
+        .filter(|line| line.len() > 0)
+        .map(|line_definition| -> VentLine {
+            // println!("Processing input line: {}", line_definition);
+            let mut vent_points = line_definition
+                .split(" -> ")
+                .map(|point_definition| -> Point {
+                    let mut ordinate_iter = point_definition
+                        .split(",")
+                        .map(|n| -> i32 { (n.parse::<i32>()).unwrap() });
+
+                    Point {
+                        x: ordinate_iter.next().unwrap(),
+                        y: ordinate_iter.next().unwrap(),
+                    }
+                });
+
+            VentLine {
+                start_point: vent_points.next().unwrap(),
+                end_point: vent_points.next().unwrap(),
+            }
+        })
+        .collect::<Vec<VentLine>>();
+
+    let horizontal_and_vertical_vent_lines = vent_lines
+        .iter()
+        .filter(|vent_line| vent_line.is_horizontal_or_vertical())
+        .collect::<Vec<&VentLine>>();
+
+    let max_x: usize = horizontal_and_vertical_vent_lines
+        .iter()
+        .map(|vent_line| cmp::max(vent_line.start_point.x, vent_line.end_point.x))
+        .max()
+        .unwrap() as usize;
+    let max_y: usize = horizontal_and_vertical_vent_lines
+        .iter()
+        .map(|vent_line| cmp::max(vent_line.start_point.y, vent_line.end_point.y))
+        .max()
+        .unwrap() as usize;
+
+    println!("Got max_x: {}, max_y: {}", max_x, max_y);
+    let mut ocean_floor: Vec<Vec<u32>> = vec![vec![0; max_x + 1]; max_y + 1];
+
+    // for vent_line in &horizontal_and_vertical_vent_lines {
+    //     println!("{:#?}", vent_line);
+    // }
+
+    // println!(
+    //     "Points on line at offset 1: {:?}",
+    //     horizontal_and_vertical_vent_lines[0].get_points_on_line()
+    // );
+
+    for vent_lines in &horizontal_and_vertical_vent_lines {
+        for vent_line_point in vent_lines.get_points_on_line() {
+            ocean_floor[vent_line_point.y as usize][vent_line_point.x as usize] += 1;
+        }
+    }
+    let mut overlap_count: u32 = 0;
+    for ocean_floor_row in ocean_floor {
+        for vent_count in ocean_floor_row {
+            if vent_count > 1 {
+                overlap_count += 1;
+            }
+        }
+    }
+
+    overlap_count
 }
