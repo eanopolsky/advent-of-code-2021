@@ -63,6 +63,7 @@ fn main() {
         (4, 1) => solve_day_4_part_1(puzzle_input),
         (4, 2) => solve_day_4_part_2(puzzle_input),
         (5, 1) => solve_day_5_part_1(puzzle_input),
+        (5, 2) => solve_day_5_part_2(puzzle_input),
         _ => panic!(
             "The solution for day {} part {} is not implemented",
             day, part
@@ -498,16 +499,29 @@ impl VentLine {
                 });
             }
         } else {
-            panic!(
-                "Getting points on lines that are neither horizontal nor vertical is not supported"
-            );
+            let mut x = self.start_point.x;
+            let mut y = self.start_point.y;
+            let x_step = match self.start_point.x < self.end_point.x {
+                true => 1,
+                false => -1,
+            };
+            let y_step = match self.start_point.y < self.end_point.y {
+                true => 1,
+                false => -1,
+            };
+            while x != self.end_point.x {
+                points_on_line.push(Point { x, y });
+                x += x_step;
+                y += y_step;
+            }
+            points_on_line.push(Point { x, y });
         }
         points_on_line
     }
 }
 
-fn solve_day_5_part_1(puzzle_input: String) -> u32 {
-    let vent_lines = puzzle_input
+fn get_vent_lines(puzzle_input: String) -> Vec<VentLine> {
+    puzzle_input
         .split("\n")
         .filter(|line| line.len() > 0)
         .map(|line_definition| -> VentLine {
@@ -530,35 +544,34 @@ fn solve_day_5_part_1(puzzle_input: String) -> u32 {
                 end_point: vent_points.next().unwrap(),
             }
         })
-        .collect::<Vec<VentLine>>();
+        .collect::<Vec<VentLine>>()
+}
+
+fn make_ocean_floor(vent_lines: &Vec<&VentLine>) -> Vec<Vec<u32>> {
+    let max_x: usize = vent_lines
+        .iter()
+        .map(|vent_line| cmp::max(vent_line.start_point.x, vent_line.end_point.x))
+        .max()
+        .unwrap() as usize;
+    let max_y: usize = vent_lines
+        .iter()
+        .map(|vent_line| cmp::max(vent_line.start_point.y, vent_line.end_point.y))
+        .max()
+        .unwrap() as usize;
+
+    // println!("Got max_x: {}, max_y: {}", max_x, max_y);
+    vec![vec![0; max_x + 1]; max_y + 1]
+}
+
+fn solve_day_5_part_1(puzzle_input: String) -> u32 {
+    let vent_lines = get_vent_lines(puzzle_input);
 
     let horizontal_and_vertical_vent_lines = vent_lines
         .iter()
         .filter(|vent_line| vent_line.is_horizontal_or_vertical())
         .collect::<Vec<&VentLine>>();
 
-    let max_x: usize = horizontal_and_vertical_vent_lines
-        .iter()
-        .map(|vent_line| cmp::max(vent_line.start_point.x, vent_line.end_point.x))
-        .max()
-        .unwrap() as usize;
-    let max_y: usize = horizontal_and_vertical_vent_lines
-        .iter()
-        .map(|vent_line| cmp::max(vent_line.start_point.y, vent_line.end_point.y))
-        .max()
-        .unwrap() as usize;
-
-    println!("Got max_x: {}, max_y: {}", max_x, max_y);
-    let mut ocean_floor: Vec<Vec<u32>> = vec![vec![0; max_x + 1]; max_y + 1];
-
-    // for vent_line in &horizontal_and_vertical_vent_lines {
-    //     println!("{:#?}", vent_line);
-    // }
-
-    // println!(
-    //     "Points on line at offset 1: {:?}",
-    //     horizontal_and_vertical_vent_lines[0].get_points_on_line()
-    // );
+    let mut ocean_floor = make_ocean_floor(&horizontal_and_vertical_vent_lines);
 
     for vent_lines in &horizontal_and_vertical_vent_lines {
         for vent_line_point in vent_lines.get_points_on_line() {
@@ -574,5 +587,47 @@ fn solve_day_5_part_1(puzzle_input: String) -> u32 {
         }
     }
 
+    overlap_count
+}
+
+// fn render_ocean_floor(ocean_floor: &Vec<Vec<u32>>) {
+//     for ocean_floor_row in ocean_floor {
+//         let rendered_row = ocean_floor_row
+//             .iter()
+//             .map(|vent_count| vent_count.to_string())
+//             .map(|vent_count_string| {
+//                 if vent_count_string == "0" {
+//                     return ".".to_string();
+//                 }
+//                 vent_count_string
+//             })
+//             .collect::<Vec<String>>()
+//             .join("");
+//         println!("{}", rendered_row);
+//     }
+// }
+
+fn solve_day_5_part_2(puzzle_input: String) -> u32 {
+    let vent_lines = get_vent_lines(puzzle_input);
+    let vent_lines = vent_lines.iter().collect::<Vec<&VentLine>>();
+
+    let mut ocean_floor = make_ocean_floor(&vent_lines);
+
+    for vent_line in &vent_lines {
+        for vent_line_point in vent_line.get_points_on_line() {
+            ocean_floor[vent_line_point.y as usize][vent_line_point.x as usize] += 1;
+        }
+        // println!("Applied vent line {:?}", vent_line);
+        // render_ocean_floor(&ocean_floor);
+    }
+    let mut overlap_count: u32 = 0;
+    for ocean_floor_row in &ocean_floor {
+        for vent_count in ocean_floor_row {
+            if vent_count > &1 {
+                overlap_count += 1;
+            }
+        }
+    }
+    // render_ocean_floor(&ocean_floor);
     overlap_count
 }
