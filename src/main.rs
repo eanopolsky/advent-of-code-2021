@@ -53,17 +53,19 @@ fn main() {
     let puzzle_input: String = fs::read_to_string(input_file_path)
         .expect("Something went wrong while reading the input file.");
 
-    let solution: u32 = match (day, part) {
-        (1, 1) => solve_day_1_part_1(puzzle_input),
-        (1, 2) => solve_day_1_part_2(puzzle_input),
-        (2, 1) => solve_day_2_part_1(puzzle_input),
-        (2, 2) => solve_day_2_part_2(puzzle_input),
-        (3, 1) => solve_day_3_part_1(puzzle_input),
-        (3, 2) => solve_day_3_part_2(puzzle_input),
-        (4, 1) => solve_day_4_part_1(puzzle_input),
-        (4, 2) => solve_day_4_part_2(puzzle_input),
-        (5, 1) => solve_day_5_part_1(puzzle_input),
-        (5, 2) => solve_day_5_part_2(puzzle_input),
+    let solution: u64 = match (day, part) {
+        (1, 1) => solve_day_1_part_1(puzzle_input).into(),
+        (1, 2) => solve_day_1_part_2(puzzle_input).into(),
+        (2, 1) => solve_day_2_part_1(puzzle_input).into(),
+        (2, 2) => solve_day_2_part_2(puzzle_input).into(),
+        (3, 1) => solve_day_3_part_1(puzzle_input).into(),
+        (3, 2) => solve_day_3_part_2(puzzle_input).into(),
+        (4, 1) => solve_day_4_part_1(puzzle_input).into(),
+        (4, 2) => solve_day_4_part_2(puzzle_input).into(),
+        (5, 1) => solve_day_5_part_1(puzzle_input).into(),
+        (5, 2) => solve_day_5_part_2(puzzle_input).into(),
+        (6, 1) => solve_day_6_part_1(puzzle_input),
+        (6, 2) => solve_day_6_part_2(puzzle_input),
         _ => panic!(
             "The solution for day {} part {} is not implemented",
             day, part
@@ -630,4 +632,43 @@ fn solve_day_5_part_2(puzzle_input: String) -> u32 {
     }
     // render_ocean_floor(&ocean_floor);
     overlap_count
+}
+
+fn simulate_lanternfish_day(lanternfish: &mut [u64; 9]) {
+    let parent_lanternfish = lanternfish[0];
+    for i in 0..8 {
+        lanternfish[i] = lanternfish[i + 1];
+    }
+    lanternfish[6] += parent_lanternfish;
+    lanternfish[8] = parent_lanternfish;
+}
+
+fn get_lanternfish(puzzle_input: String) -> [u64; 9] {
+    let mut lanternfish: [u64; 9] = [0; 9];
+    for lanternfish_due_day in puzzle_input
+        .trim()
+        .split(",")
+        .map(|lanterfish_due_string| lanterfish_due_string.parse::<usize>().unwrap())
+    {
+        lanternfish[lanternfish_due_day] += 1;
+    }
+    lanternfish
+}
+
+fn solve_day_6_part_1(puzzle_input: String) -> u64 {
+    let mut lanternfish = get_lanternfish(puzzle_input);
+    for _day in 0..80 {
+        //println!("After {} day(s), lanternfish: {:?}", day, lanternfish);
+        simulate_lanternfish_day(&mut lanternfish);
+    }
+    lanternfish.iter().sum::<u64>()
+}
+
+fn solve_day_6_part_2(puzzle_input: String) -> u64 {
+    let mut lanternfish = get_lanternfish(puzzle_input);
+    for _day in 0..256 {
+        //println!("After {} day(s), lanternfish: {:?}", day, lanternfish);
+        simulate_lanternfish_day(&mut lanternfish);
+    }
+    lanternfish.iter().sum::<u64>()
 }
