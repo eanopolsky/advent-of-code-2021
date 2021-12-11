@@ -10,6 +10,7 @@ mod day06;
 mod day07;
 mod day08;
 mod day09;
+mod day10;
 
 #[cfg(test)]
 mod test_helpers;
@@ -84,6 +85,7 @@ fn main() {
         (8, 2) => day08::solve_part_2(puzzle_input),
         (9, 1) => day09::solve_part_1(puzzle_input),
         (9, 2) => day09::solve_part_2(puzzle_input),
+        (10, 1) => day10::solve_part_1(puzzle_input),
         _ => panic!(
             "The solution for day {} part {} is not implemented",
             day, part
