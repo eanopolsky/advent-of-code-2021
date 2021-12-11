@@ -71,6 +71,9 @@ impl OctopusMap {
             },
         );
     }
+    fn get_octopus_count(&self) -> usize {
+        self.hash_map.len()
+    }
     fn get_min_x(&self) -> i8 {
         self.hash_map
             .keys()
@@ -166,7 +169,7 @@ impl OctopusMap {
     }
 }
 
-pub(crate) fn solve_part_1(puzzle_input: String) -> u64 {
+fn load_octopodes(puzzle_input: String) -> OctopusMap {
     let mut my_octopus_map = OctopusMap {
         hash_map: HashMap::<(i8, i8), Octopus>::new(),
     };
@@ -179,6 +182,11 @@ pub(crate) fn solve_part_1(puzzle_input: String) -> u64 {
             );
         }
     }
+    my_octopus_map
+}
+
+pub(crate) fn solve_part_1(puzzle_input: String) -> u64 {
+    let mut my_octopus_map = load_octopodes(puzzle_input);
     // println!("Initial map:\n{}", my_octopus_map);
     let mut total_flashes: u64 = 0;
     for _step in 1..=100 {
@@ -188,10 +196,28 @@ pub(crate) fn solve_part_1(puzzle_input: String) -> u64 {
     total_flashes
 }
 
+pub(crate) fn solve_part_2(puzzle_input: String) -> u64 {
+    let mut my_octopus_map = load_octopodes(puzzle_input);
+    let population_size: u64 = my_octopus_map.get_octopus_count() as u64;
+    let mut steps_performed: u64 = 0;
+    loop {
+        steps_performed += 1;
+        if my_octopus_map.simulate_step() == population_size {
+            break;
+        }
+    }
+    steps_performed
+}
+
 #[cfg(test)]
 use super::test_helpers;
 
 #[test]
 fn test_part_1() {
     assert_eq!(solve_part_1(test_helpers::load_puzzle_input(11)), 1705);
+}
+
+#[test]
+fn test_part_2() {
+    assert_eq!(solve_part_2(test_helpers::load_puzzle_input(11)), 265);
 }
