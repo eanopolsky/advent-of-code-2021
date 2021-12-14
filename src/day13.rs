@@ -68,21 +68,62 @@ fn perform_fold(
     new_dot_coordinates
 }
 
-fn render_dots(dots: &HashSet<(i64, i64)>) {
-    let x_min = dots.iter().map(|tuple| tuple.0).min().unwrap();
-    let x_max = dots.iter().map(|tuple| tuple.0).max().unwrap();
-    let y_min = dots.iter().map(|tuple| tuple.1).min().unwrap();
-    let y_max = dots.iter().map(|tuple| tuple.1).max().unwrap();
-    for y in y_min..=y_max {
-        for x in x_min..=x_max {
-            if dots.contains(&(x, y)) {
-                print!("#");
-            } else {
-                print!(".");
+// fn render_dots(dots: &HashSet<(i64, i64)>) {
+//     let x_min = dots.iter().map(|tuple| tuple.0).min().unwrap();
+//     let x_max = dots.iter().map(|tuple| tuple.0).max().unwrap();
+//     let y_min = dots.iter().map(|tuple| tuple.1).min().unwrap();
+//     let y_max = dots.iter().map(|tuple| tuple.1).max().unwrap();
+//     for y in y_min..=y_max {
+//         for x in x_min..=x_max {
+//             if dots.contains(&(x, y)) {
+//                 print!("#");
+//             } else {
+//                 print!(".");
+//             }
+//         }
+//         print!("\n");
+//     }
+// }
+
+fn ocr_character(character_dots: &[bool]) -> char {
+    match character_dots {
+        [true, true, true, false, true, false, false, true, true, true, true, false, true, false, false, true, true, false, false, true, true, true, true, false] => {
+            'B'
+        }
+        [true, true, true, true, true, false, false, false, true, true, true, false, true, false, false, false, true, false, false, false, true, false, false, false] => {
+            'F'
+        }
+        [false, true, true, false, true, false, false, true, true, false, false, false, true, false, true, true, true, false, false, true, false, true, true, true] => {
+            'G'
+        }
+        [true, false, false, true, true, false, false, true, true, true, true, true, true, false, false, true, true, false, false, true, true, false, false, true] => {
+            'H'
+        }
+        [true, false, false, false, true, false, false, false, true, false, false, false, true, false, false, false, true, false, false, false, true, true, true, true] => {
+            'L'
+        }
+        [true, true, true, false, true, false, false, true, true, false, false, true, true, true, true, false, true, false, true, false, true, false, false, true] => {
+            'R'
+        }
+        [true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, false, true, true, false] => {
+            'U'
+        }
+        _ => panic!("Unsupported OCR character"),
+    }
+}
+
+fn ocr_dots(dots: &HashSet<(i64, i64)>) -> String {
+    let mut ocr_result = String::with_capacity(8);
+    for x_offset in [0, 5, 10, 15, 20, 25, 30, 35] {
+        let mut character_pattern = Vec::<bool>::with_capacity(24);
+        for y in 0..=5 {
+            for x in 0..=3 {
+                character_pattern.push(dots.contains(&(x + x_offset, y)));
             }
         }
-        print!("\n");
+        ocr_result.push(ocr_character(&character_pattern));
     }
+    ocr_result
 }
 
 pub(crate) fn solve_part_1(puzzle_input: String) -> u64 {
@@ -90,14 +131,13 @@ pub(crate) fn solve_part_1(puzzle_input: String) -> u64 {
     perform_fold(&dot_coordinates, &fold_instructions[0]).len() as u64
 }
 
-pub(crate) fn solve_part_2(puzzle_input: String) -> u64 {
+pub(crate) fn solve_part_2(puzzle_input: String) -> String {
     let (mut dot_coordinates, fold_instructions) = parse_input(puzzle_input);
-    //    let mut new_dot_coordinates = HashSet::<(i64, i64)>::new();
     for fold_instruction in fold_instructions {
         dot_coordinates = perform_fold(&dot_coordinates, &fold_instruction);
     }
-    render_dots(&dot_coordinates);
-    0
+    // render_dots(&dot_coordinates);
+    ocr_dots(&dot_coordinates)
 }
 
 #[cfg(test)]
@@ -106,4 +146,12 @@ use super::test_helpers;
 #[test]
 fn test_part_1() {
     assert_eq!(solve_part_1(test_helpers::load_puzzle_input(13)), 810);
+}
+
+#[test]
+fn test_part_2() {
+    assert_eq!(
+        solve_part_2(test_helpers::load_puzzle_input(13)),
+        "HLBUBGFR"
+    );
 }
