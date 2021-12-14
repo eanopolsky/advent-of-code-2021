@@ -95,6 +95,7 @@ fn main() {
         (12, 1) => day12::solve_part_1(puzzle_input),
         (12, 2) => day12::solve_part_2(puzzle_input),
         (13, 1) => day13::solve_part_1(puzzle_input),
+        (13, 2) => day13::solve_part_2(puzzle_input),
         _ => panic!(
             "The solution for day {} part {} is not implemented",
             day, part
