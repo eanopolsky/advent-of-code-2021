@@ -1,11 +1,23 @@
 use std::collections::HashMap;
 
+/// Represents a pair insertion rule.
+///
+/// `"CH -> B"` is represented as `PairInsertionRule { first: 'C',
+/// second: 'H', insert: 'B' }`
+#[derive(Debug, PartialEq)]
 struct PairInsertionRule {
     first: char,
     second: char,
     insert: char,
 }
 
+/// Parses the puzzle input.
+///
+/// Returns a tuple. The first value, `Vec<char>`, contains the
+/// characters of the polymer template from the first line of the
+/// puzzle input. The second value, `Vec<PairInsertionRule>` contains
+/// [`PairInsertionRule`]s representing each pair insertion rule on
+/// subsequent lines of the puzzle input.
 fn parse_input(puzzle_input: String) -> (Vec<char>, Vec<PairInsertionRule>) {
     let mut puzzle_part_iter = puzzle_input.trim().split("\n\n");
     let polymer_template = puzzle_part_iter
@@ -31,6 +43,19 @@ fn parse_input(puzzle_input: String) -> (Vec<char>, Vec<PairInsertionRule>) {
     (polymer_template, pair_insertion_rules)
 }
 
+/// Determines the resultant element frequency when pair insertion
+/// rules are applied to a given pair of elements `steps` number of
+/// times.
+///
+/// `first_element` and `second_element` are two sequential characters
+/// from a polymer template.
+///
+/// `steps` is the number of times to run the pair through pair
+/// insertion rules.
+///
+/// `pair_insertion_rules` are the rules provided in the puzzle input.
+///
+/// `cache` is used for memoization.
 fn pair_to_element_frequency(
     first_element: char,
     second_element: char,
@@ -84,6 +109,7 @@ fn pair_to_element_frequency(
     result
 }
 
+/// Reduces two hashes containing element frequencies into one.
 fn reduce_adjacent_frequencies(
     first_frequencies: &HashMap<char, u64>,
     second_frequencies: &HashMap<char, u64>,
@@ -181,17 +207,80 @@ fn test_part_1() {
 }
 
 #[test]
-fn test_pair_to_element_frequency() {
-    let mut cache: HashMap<(char, char, u32), HashMap<char, u64>> = HashMap::new();
-    let frequency_test =
-        pair_to_element_frequency('N', 'N', 0, &Vec::<PairInsertionRule>::new(), &mut cache);
-    assert_eq!(*frequency_test.get(&'N').unwrap(), 2);
-}
-
-#[test]
 fn test_part_2() {
     assert_eq!(
         solve_part_2(test_helpers::load_puzzle_input(14)),
         "2911561572630"
+    );
+}
+
+#[test]
+fn test_parse_input() {
+    let (polymer_template, pair_insertion_rules) =
+        parse_input("ABCD\n\nAB -> C\nBC -> D\n".to_string());
+    assert_eq!(polymer_template, vec!['A', 'B', 'C', 'D']);
+    assert_eq!(
+        pair_insertion_rules,
+        vec![
+            PairInsertionRule {
+                first: 'A',
+                second: 'B',
+                insert: 'C'
+            },
+            PairInsertionRule {
+                first: 'B',
+                second: 'C',
+                insert: 'D'
+            }
+        ]
+    );
+}
+
+#[test]
+fn test_pair_to_element_frequency() {
+    let mut cache: HashMap<(char, char, u32), HashMap<char, u64>> = HashMap::new();
+    let mut result = HashMap::<char, u64>::new();
+    result.insert('N', 2);
+    assert_eq!(
+        pair_to_element_frequency('N', 'N', 0, &Vec::<PairInsertionRule>::new(), &mut cache),
+        result
+    );
+    cache.clear();
+    result.clear();
+    result.insert('A', 1);
+    result.insert('B', 1);
+    result.insert('C', 1);
+    assert_eq!(
+        pair_to_element_frequency(
+            'A',
+            'B',
+            1,
+            &vec![PairInsertionRule {
+                first: 'A',
+                second: 'B',
+                insert: 'C'
+            }],
+            &mut cache
+        ),
+        result
+    );
+}
+
+#[test]
+fn test_reduce_adjacent_frequencies() {
+    let mut first_frequencies: HashMap<char, u64> = HashMap::new();
+    first_frequencies.insert('A', 1);
+    first_frequencies.insert('B', 1);
+    let mut second_frequencies: HashMap<char, u64> = HashMap::new();
+    second_frequencies.insert('B', 1);
+    second_frequencies.insert('C', 1);
+    let middle_element: char = 'B';
+    let mut result: HashMap<char, u64> = HashMap::new();
+    result.insert('A', 1);
+    result.insert('B', 1);
+    result.insert('C', 1);
+    assert_eq!(
+        reduce_adjacent_frequencies(&first_frequencies, &second_frequencies, middle_element),
+        result
     );
 }
