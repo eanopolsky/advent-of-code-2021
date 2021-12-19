@@ -94,8 +94,8 @@ fn parse_literal_value(bits: &[u8]) -> (u64, usize) {
     (literal_value, length_in_bits)
 }
 
-pub(crate) fn solve_part_1(puzzle_string: String) -> String {
-    let bits = puzzle_string
+fn parse_puzzle_string_to_bits(puzzle_string: String) -> Vec<u8> {
+    puzzle_string
         .trim()
         .chars()
         .map(|c| {
@@ -108,13 +108,74 @@ pub(crate) fn solve_part_1(puzzle_string: String) -> String {
             ]
         })
         .flatten()
-        .collect::<Vec<u8>>();
+        .collect::<Vec<u8>>()
+}
+
+pub(crate) fn solve_part_1(puzzle_string: String) -> String {
+    let bits = parse_puzzle_string_to_bits(puzzle_string);
     // println!("{:?}", bits);
     let packet = parse_packet(&bits);
     // println!("Packet: {:?}", packet);
     let mut packets: Vec<Packet> = Vec::new();
     packets.push(packet);
     sum_packet_versions(&packets).to_string()
+}
+
+pub(crate) fn solve_part_2(puzzle_string: String) -> String {
+    let bits = parse_puzzle_string_to_bits(puzzle_string);
+    let packet = parse_packet(&bits);
+    evaluate_packet(&packet).to_string()
+}
+
+fn evaluate_packet(packet: &Packet) -> u64 {
+    if packet.type_id == 4 {
+        return packet.literal_value.unwrap();
+    }
+    let mut sub_packet_iterator = packet.sub_packets.as_ref().unwrap().iter();
+    match packet.type_id {
+        0 => sub_packet_iterator
+            .map(|sub_packet| evaluate_packet(sub_packet))
+            .sum(),
+        1 => sub_packet_iterator
+            .map(|sub_packet| evaluate_packet(sub_packet))
+            .product(),
+        2 => sub_packet_iterator
+            .map(|sub_packet| evaluate_packet(sub_packet))
+            .min()
+            .unwrap(),
+        3 => sub_packet_iterator
+            .map(|sub_packet| evaluate_packet(sub_packet))
+            .max()
+            .unwrap(),
+        5 => {
+            let first = sub_packet_iterator.next().unwrap();
+            let second = sub_packet_iterator.next().unwrap();
+            if evaluate_packet(first) > evaluate_packet(second) {
+                1
+            } else {
+                0
+            }
+        }
+        6 => {
+            let first = sub_packet_iterator.next().unwrap();
+            let second = sub_packet_iterator.next().unwrap();
+            if evaluate_packet(first) < evaluate_packet(second) {
+                1
+            } else {
+                0
+            }
+        }
+        7 => {
+            let first = sub_packet_iterator.next().unwrap();
+            let second = sub_packet_iterator.next().unwrap();
+            if evaluate_packet(first) == evaluate_packet(second) {
+                1
+            } else {
+                0
+            }
+        }
+        _ => panic!("Invalid packet type ID"),
+    }
 }
 
 fn sum_packet_versions(packets: &Vec<Packet>) -> u64 {
@@ -166,4 +227,12 @@ use super::test_helpers;
 #[test]
 fn test_part_1() {
     assert_eq!(solve_part_1(test_helpers::load_puzzle_input(16)), "860");
+}
+
+#[test]
+fn test_part_2() {
+    assert_eq!(
+        solve_part_2(test_helpers::load_puzzle_input(16)),
+        "470949537659"
+    );
 }
